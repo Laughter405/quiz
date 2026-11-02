@@ -134,6 +134,18 @@
   .opt.on{border-color:var(--navy);background:#F2F5FB;}
   .opt.on .dot{background:var(--navy);border-color:var(--navy);color:#fff;}
 
+  /* 上一题 */
+  .q-nav{display:flex;align-items:center;justify-content:flex-start;min-height:34px;margin-top:4px;}
+  .prev-btn{
+    display:inline-flex;align-items:center;gap:5px;
+    background:transparent;border:none;padding:8px 4px;border-radius:8px;
+    font-size:14px;font-weight:600;font-family:inherit;color:#8A8578;
+    cursor:pointer;transition:color .16s ease;
+  }
+  .prev-btn::before{content:"←";font-size:15px;line-height:1;}
+  .prev-btn:active{color:var(--navy);}
+  .prev-btn[hidden]{display:none;}
+
   /* ============ 结果 ============ */
   .res-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;padding-top:6px;}
   .res-img{
@@ -240,6 +252,9 @@
       <div class="q-quote"><p id="q-text"></p></div>
       <p class="q-ask">选一个最像的：</p>
       <div class="opts" id="opts"></div>
+    </div>
+    <div class="q-nav">
+      <button class="prev-btn" id="btn-prev" hidden>上一题</button>
     </div>
   </section>
 
@@ -367,6 +382,7 @@ const SPECIAL = {
 let idx = 0;
 let picks = new Array(QUIZ.length).fill(-1);
 let score = 0;
+let autoNext = null;
 
 const $ = (id) => document.getElementById(id);
 const screens = ["s-cover", "s-quiz", "s-result", "s-ask", "s-answer"];
@@ -392,6 +408,7 @@ function renderQ() {
     box.appendChild(b);
   });
   $("bar-fill").style.width = (idx / QUIZ.length * 100) + "%";
+  $("btn-prev").hidden = idx === 0;
 }
 
 function choose(i) {
@@ -399,7 +416,8 @@ function choose(i) {
   const item = QUIZ[idx];
   if (i === item.a) score++;
   document.querySelectorAll(".opt").forEach((el, k) => el.classList.toggle("on", k === i));
-  setTimeout(() => {
+  clearTimeout(autoNext);
+  autoNext = setTimeout(() => {
     if (idx < QUIZ.length - 1) {
       idx++;
       renderQ();
@@ -407,6 +425,13 @@ function choose(i) {
       finish();
     }
   }, 320);
+}
+
+function prevQ() {
+  if (idx === 0) return;
+  clearTimeout(autoNext);
+  idx--;
+  renderQ();
 }
 
 /* ================= 结果 ================= */
@@ -463,6 +488,7 @@ function reset() {
 
 /* ================= 事件 ================= */
 $("btn-start").addEventListener("click", () => { idx = 0; score = 0; picks = new Array(QUIZ.length).fill(-1); show("s-quiz", 0); renderQ(); });
+$("btn-prev").addEventListener("click", prevQ);
 $("btn-yes").addEventListener("click", () => renderResult(SPECIAL.yes.title, SPECIAL.yes.img, SPECIAL.yes.text));
 $("btn-no").addEventListener("click", () => renderResult(SPECIAL.no.title, SPECIAL.no.img, SPECIAL.no.text));
 $("btn-answer").addEventListener("click", renderAnswer);
